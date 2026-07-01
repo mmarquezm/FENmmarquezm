@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Evaluación Intragrupal — Taller de Integración Profesional</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600;8..60,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #efece4; font-family: 'Public Sans', system-ui, sans-serif; color: #212b3b; -webkit-font-smoothing: antialiased; }
+  input[type=range] { accent-color: #2a4a7f; }
+  button:disabled { opacity: 0.7; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  #app > div { animation: fadeUp .25s ease; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+/* =========================================================================
+   CONFIGURACIÓN
+   Pega aquí la URL de tu Web App de Google Apps Script (ver INSTRUCCIONES.md)
+   ========================================================================= */
+const CONFIG = {
+  SHEET_WEBAPP_URL: '' // ej: 'https://script.google.com/macros/s/AKfycb.../exec'
+};
+
+/* =========================================================================
+   DATOS: carreras, roster (nómina por carrera/grupo), criterios de evaluación
+   ========================================================================= */
+</script>
+<script>
+const carreras = [
+    { code: 'CA', label: 'Contador Auditor' },
+    { code: 'IICG', label: 'Ing. en Información y Control de Gestión' }
+  ];
+
+const roster = {
+    IICG: {
+      '1': [{n:'Acevedo Guzmán Pamela Paz',c:'ACEVEDO GUZMÁN PAMELA PAZ',r:'22.024.355-9'}, {n:'Carter Zúñiga Cristóbal Eduardo',c:'CARTER ZÚÑIGA CRISTÓBAL EDUARDO',r:'22.223.572-3'}, {n:'Méndez Baeza Javiera Paz del Carmen',c:'MÉNDEZ BAEZA JAVIERA PAZ DEL CARMEN',r:'22.260.569-5'}, {n:'Rojas Calderón Constanza Andrea',c:'ROJAS CALDERÓN CONSTANZA ANDREA',r:'22.031.348-4'}, {n:'Toledo Valle Alonso',c:'TOLEDO VALLE ALONSO',r:'20.984.390-0'}],
+      '2': [{n:'Aravena Calderón Joaquin Alfredo',c:'ARAVENA CALDERÓN JOAQUIN ALFREDO',r:'22.041.531-7'}, {n:'Barraza Concha Maite Ignacia',c:'BARRAZA CONCHA MAITE IGNACIA',r:'22.179.814-7'}, {n:'García Sotelo Juan - Pablo Ignacio',c:'GARCÍA SOTELO JUAN - PABLO IGNACIO',r:'21.063.725-7'}, {n:'Orellana Sánchez Benjamín Ignacio',c:'ORELLANA SÁNCHEZ BENJAMÍN IGNACIO',r:'22.096.966-5'}, {n:'Vergara Álvarez Francisco José',c:'VERGARA ÁLVAREZ FRANCISCO JOSÉ',r:'21.081.091-9'}],
+      '3': [{n:'Aguirre Pradenas Anais Martina',c:'AGUIRRE PRADENAS ANAIS MARTINA',r:'22.096.274-1'}, {n:'Barrientos Araya Nicolás Ignacio',c:'BARRIENTOS ARAYA NICOLÁS IGNACIO',r:'22.334.404-6'}, {n:'Iturriaga Georgue Ayelen Yeray',c:'ITURRIAGA GEORGUE AYELEN YERAY',r:'22.383.612-7'}, {n:'Sepúlveda Maldonado Josefa Matilde',c:'SEPÚLVEDA MALDONADO JOSEFA MATILDE',r:'21.940.919-2'}, {n:'Torres Tejeda Maite Andrea',c:'TORRES TEJEDA MAITE ANDREA',r:'22.179.411-7'}],
+      '4': [{n:'Ariztía Parra Isabel Valentina',c:'ARIZTÍA PARRA ISABEL VALENTINA',r:'21.915.418-6'}, {n:'Conti Torres Isabella Catherina',c:'CONTI TORRES ISABELLA CATHERINA',r:'21.998.557-6'}, {n:'Montero Campos Benjamín Jesús Ignacio',c:'MONTERO CAMPOS BENJAMÍN JESÚS IGNACIO',r:'22.337.468-9'}, {n:'Rebolledo Rivera Dylan Josue',c:'REBOLLEDO RIVERA DYLAN JOSUE',r:'20.788.933-4'}, {n:'Ubilla Contreras Maura Francisca',c:'UBILLA CONTRERAS MAURA FRANCISCA',r:'21.746.733-0'}],
+      '5': [{n:'Areyuna Campos Milenka Rosario',c:'AREYUNA CAMPOS MILENKA ROSARIO',r:'21.116.933-8'}, {n:'Bustamante Olivares Antonia Belén',c:'BUSTAMANTE OLIVARES ANTONIA BELÉN',r:'21.840.680-7'}, {n:'Jiménez Parraguez Sophia Isidora',c:'JIMÉNEZ PARRAGUEZ SOPHIA ISIDORA',r:'22.245.807-2'}, {n:'Ortega Contreras Gabriela Alejandra',c:'ORTEGA CONTRERAS GABRIELA ALEJANDRA',r:'21.862.939-3'}, {n:'Soto Muñoz Alvaro Nicolas',c:'SOTO MUÑOZ ALVARO NICOLAS',r:'22.156.477-4'}],
+      '6': [{n:'Aguirre Núñez Javiera del Rosario',c:'AGUIRRE NÚÑEZ JAVIERA DEL ROSARIO',r:'21.934.939-4'}, {n:'Guerra Palma Martín Andrés',c:'GUERRA PALMA MARTÍN ANDRÉS',r:'21.390.331-4'}, {n:'Muñoz Lagos Carolina Belén',c:'MUÑOZ LAGOS CAROLINA BELÉN',r:'21.814.929-4'}, {n:'Salgado Suazo Sebastian Alonso',c:'SALGADO SUAZO SEBASTIAN ALONSO',r:'21.977.517-2'}, {n:'Valdés Aguayo Catalina Clara',c:'VALDÉS AGUAYO CATALINA CLARA',r:'22.009.741-2'}],
+      '7': [{n:'Astudillo Vargas Valentina Belén',c:'ASTUDILLO VARGAS VALENTINA BELÉN',r:'22.289.748-3'}, {n:'Erazo Jiménez Tomás Joaquin',c:'ERAZO JIMÉNEZ TOMÁS JOAQUIN',r:'21.979.194-1'}, {n:'Mai Xinqi',c:'MAI . XINQI',r:'25.283.587-3'}, {n:'Peña Roa Andrés Eugenio',c:'PEÑA ROA ANDRÉS EUGENIO',r:'21.689.978-4'}, {n:'Soto Navarrete Abryll Karinna',c:'SOTO NAVARRETE ABRYLL KARINNA',r:'21.887.127-5'}],
+      '8': [{n:'Arce Ortiz Valentina Isidora',c:'ARCE ORTIZ VALENTINA ISIDORA',r:'22.083.790-4'}, {n:'Cabello Mutis Manuel Ignacio',c:'CABELLO MUTIS MANUEL IGNACIO',r:'21.745.458-1'}, {n:'Reyes Nahuelpán Daniela Antonia',c:'REYES NAHUELPÁN DANIELA ANTONIA',r:'22.321.408-8'}, {n:'Sanchez Lopez Yeimi Daniela',c:'SANCHEZ LOPEZ YEIMI DANIELA',r:'25.958.158-3'}, {n:'Yupan Uchalin Darwin Smith',c:'YUPAN UCHALIN DARWIN SMITH',r:'P120700865'}],
+      '9': [{n:'Arce Salazar Vicente Alonso',c:'ARCE SALAZAR VICENTE ALONSO',r:'21.927.482-3'}, {n:'González Tejo Gustavo Aaron',c:'GONZÁLEZ TEJO GUSTAVO AARON',r:'21.515.696-6'}, {n:'Leiva Mendoza Felipe Armando',c:'LEIVA MENDOZA FELIPE ARMANDO',r:'21.892.897-8'}, {n:'Moreno Harcha Agustín Nicolás',c:'MORENO HARCHA AGUSTÍN NICOLÁS',r:'21.768.138-3'}, {n:'Soto Pino Lukas Pablo',c:'SOTO PINO LUKAS PABLO',r:'22.308.087-1'}],
+      '10': [{n:'Aravena Ortiz Javiera Trinidad',c:'ARAVENA ORTIZ JAVIERA TRINIDAD',r:'21.131.770-1'}, {n:'Cárdenas Acevedo Cristóbal Israel',c:'CÁRDENAS ACEVEDO CRISTÓBAL ISRAEL',r:'21.622.010-2'}, {n:'Neira Cáceres Sergio Miguel',c:'NEIRA CÁCERES SERGIO MIGUEL',r:'21.406.005-1'}, {n:'Pino Álvarez Josefa Andrea',c:'PINO ÁLVAREZ JOSEFA ANDREA',r:'22.169.987-4'}, {n:'Torres Carvajal Renato Ignacio',c:'TORRES CARVAJAL RENATO IGNACIO',r:'21.797.833-5'}],
+      '11': [{n:'Berkhoff González Katalina Isidora',c:'BERKHOFF GONZÁLEZ KATALINA ISIDORA',r:'20.080.248-9'}, {n:'Contreras Griott Vicente Antonio',c:'CONTRERAS GRIOTT VICENTE ANTONIO',r:'22.307.043-4'}, {n:'Martínez Álvarez Catalina Millaray',c:'MARTÍNEZ ÁLVAREZ CATALINA MILLARAY',r:'22.002.017-7'}, {n:'Saavedra Díaz Josefa Isidora',c:'SAAVEDRA DÍAZ JOSEFA ISIDORA',r:'22.398.462-2'}, {n:'Tobar López Martina Odalís de los Angeles',c:'TOBAR LÓPEZ MARTINA ODALÍS DE LOS ANGELES',r:'22.209.550-6'}],
+      '12': [{n:'Arratia Bertolini Macarena Patricia',c:'ARRATIA BERTOLINI MACARENA PATRICIA',r:'20.485.052-6'}, {n:'Guerrero Zamora Sofia del Carmen',c:'GUERRERO ZAMORA SOFIA DEL CARMEN',r:'21.968.651-K'}, {n:'López Caprioglio Ignacio Alonso',c:'LÓPEZ CAPRIOGLIO IGNACIO ALONSO',r:'22.308.404-4'}, {n:'Namor Castro Arantza Nohelyn',c:'NAMOR CASTRO ARANTZA NOHELYN',r:'22.420.440-K'}, {n:'Sepúlveda Vidal Aleks Ignacio',c:'SEPÚLVEDA VIDAL ALEKS IGNACIO',r:'21.524.913-1'}],
+      '13': [{n:'Buzeta Núñez Constanza Ailyn',c:'BUZETA NÚÑEZ CONSTANZA AILYN',r:'21.996.978-3'}, {n:'Fuenzalida León Vicente Alejandro',c:'FUENZALIDA LEÓN VICENTE ALEJANDRO',r:'22.279.465-K'}, {n:'Morales Gallardo Valentin Eduardo',c:'MORALES GALLARDO VALENTIN EDUARDO',r:'21.950.874-3'}, {n:'Reyes González Sebastián Ismael',c:'REYES GONZÁLEZ SEBASTIÁN ISMAEL',r:'21.497.804-0'}, {n:'Trigo Rivas Agustín Alonso',c:'TRIGO RIVAS AGUSTÍN ALONSO',r:'22.287.926-4'}],
+      '14': [{n:'Barraza González Pablo Ignacio',c:'BARRAZA GONZÁLEZ PABLO IGNACIO',r:'21.605.068-1'}, {n:'Castex Arratia Juan Ignacio',c:'CASTEX ARRATIA JUAN IGNACIO',r:'21.798.586-2'}, {n:'Kaplan Rodríguez Aarón Zait',c:'KAPLAN RODRÍGUEZ AARÓN ZAIT',r:'22.166.047-1'}, {n:'Pérez Castro Paulina',c:'PÉREZ CASTRO PAULINA',r:'21.612.475-8'}, {n:'Serrano Álvarez Valentina Alejandra',c:'SERRANO ÁLVAREZ VALENTINA ALEJANDRA',r:'21.867.000-8'}],
+      '15': [{n:'Cáceres Fernández Antonia Belen',c:'CÁCERES FERNÁNDEZ ANTONIA BELEN',r:'21.607.495-5'}, {n:'Faúndez Díaz Mateo Ignacio',c:'FAÚNDEZ DÍAZ MATEO IGNACIO',r:'21.721.295-2'}, {n:'Orellana Saavedra Lukas Vicente',c:'ORELLANA SAAVEDRA LUKAS VICENTE',r:'22.210.231-6'}, {n:'Rodríguez González Cristobal Alonso',c:'RODRÍGUEZ GONZÁLEZ CRISTOBAL ALONSO',r:'22.214.387-K'}, {n:'Valenzuela López Martín Ignacio',c:'VALENZUELA LÓPEZ MARTÍN IGNACIO',r:'21.867.343-0'}],
+      '16': [{n:'Carreño Mellado Benjamin Alessandro',c:'CARREÑO MELLADO BENJAMIN ALESSANDRO',r:'22.172.721-5'}, {n:'Jimenez Apablaza Sebastián Eduardo',c:'JIMENEZ APABLAZA SEBASTIÁN EDUARDO',r:'22.245.320-8'}, {n:'Muraro Inostroza Bruno Giovanni',c:'MURARO INOSTROZA BRUNO GIOVANNI',r:'22.289.148-5'}, {n:'Schencke Kiessling Nicolas',c:'SCHENCKE KIESSLING NICOLAS',r:'21.565.712-4'}, {n:'Soto Arnal Reinaldo Jose',c:'SOTO ARNAL REINALDO JOSE',r:'27.836.052-0'}],
+      '17': [{n:'Bustamante Toro Sofía Graciela',c:'BUSTAMANTE TORO SOFÍA GRACIELA',r:'22.003.438-0'}, {n:'Gutiérrez Sarabia Alexa Javiera',c:'GUTIÉRREZ SARABIA ALEXA JAVIERA',r:'21.955.283-1'}, {n:'Loguercio Reyes Cristóbal Ignacio',c:'LOGUERCIO REYES CRISTÓBAL IGNACIO',r:'21.349.563-1'}, {n:'Pizarro Contreras Maria Ignacia',c:'PIZARRO CONTRERAS MARIA IGNACIA',r:'22.104.546-7'}, {n:'Vache Astudillo Maximiliano Gustavo',c:'VACHE ASTUDILLO MAXIMILIANO GUSTAVO',r:'21.343.302-4'}],
+      '18': [{n:'Moya Loyola Luis Felipe',c:'MOYA LOYOLA LUIS FELIPE',r:'20.954.200-5'}, {n:'Ríos Briones Rafaella Carolina',c:'RÍOS BRIONES RAFAELLA CAROLINA',r:'22.168.706-K'}, {n:'Soto Ortega Diego Thomás',c:'SOTO ORTEGA DIEGO THOMÁS',r:'21.767.891-9'}, {n:'Vásquez Castillo Fernanda Beatriz',c:'VÁSQUEZ CASTILLO FERNANDA BEATRIZ',r:'22.370.204-K'}, {n:'Zambrano Rojas Tiare Alexandra',c:'ZAMBRANO ROJAS TIARE ALEXANDRA',r:'22.265.759-8'}],
+      '19': [{n:'González Soto Valentina Sofia',c:'GONZÁLEZ SOTO VALENTINA SOFIA',r:'21.964.346-2'}, {n:'Mendoza Clavería Ayleen Ignacia',c:'MENDOZA CLAVERÍA AYLEEN IGNACIA',r:'22.226.964-4'}, {n:'Sanhueza Lizama Francisca Ignacia',c:'SANHUEZA LIZAMA FRANCISCA IGNACIA',r:'22.034.901-2'}, {n:'Tomic Giese Maximiliano Rafael',c:'TOMIC GIESE MAXIMILIANO RAFAEL',r:'22.281.597-5'}, {n:'Zamorano Tapia Maite Belén',c:'ZAMORANO TAPIA MAITE BELÉN',r:'22.086.038-8'}],
+      '20': [{n:'Fredes Maldonado Vicente Cristián',c:'FREDES MALDONADO VICENTE CRISTIÁN',r:'22.096.733-6'}, {n:'Navarro Cornejo Sofía Antonia',c:'NAVARRO CORNEJO SOFÍA ANTONIA',r:'20.472.947-6'}, {n:'Seccatore Moraga Dante Luciano',c:'SECCATORE MORAGA DANTE LUCIANO',r:'22.035.142-4'}, {n:'Vásquez Mauricio Katerin Elizabeth',c:'VÁSQUEZ MAURICIO KATERIN ELIZABETH',r:'27.568.029-K'}, {n:'Zúñiga Miranda Elías Andrés',c:'ZÚÑIGA MIRANDA ELÍAS ANDRÉS',r:'22.347.034-3'}],
+      '21': [{n:'González Gutiérrez Daniel Fabián Alejandro',c:'GONZÁLEZ GUTIÉRREZ DANIEL FABIÁN ALEJANDRO',r:'21.886.272-1'}, {n:'Guedeney Ortiz Enrique Antonio',c:'GUEDENEY ORTIZ ENRIQUE ANTONIO',r:'21.734.025-K'}, {n:'Lohse Frías Isidora Fernanda',c:'LOHSE FRÍAS ISIDORA FERNANDA',r:'21.747.157-5'}, {n:'Parraguez Hernandez Antonia Ignacia',c:'PARRAGUEZ HERNANDEZ ANTONIA IGNACIA',r:'21.932.966-0'}, {n:'Vizcaíno Rivera Josefina Paz',c:'VIZCAÍNO RIVERA JOSEFINA PAZ',r:'22.324.418-1'}],
+      '22': [{n:'Durán Vargas Fernanda Paz',c:'DURÁN VARGAS FERNANDA PAZ',r:'22.085.070-6'}, {n:'Jn Charles Jonas Junior',c:'JN CHARLES . JONAS JUNIOR',r:'24.802.793-2'}, {n:'Ruedlinger Vargas Klaus Alexander',c:'RUEDLINGER VARGAS KLAUS ALEXANDER',r:'22.211.281-8'}, {n:'Ulloa Mella Mateo Ignacio',c:'ULLOA MELLA MATEO IGNACIO',r:'20.818.912-3'}],
+      '23': [{n:'Castro Ordosgoite Juliette Victoria',c:'CASTRO ORDOSGOITE JULIETTE VICTORIA',r:'22.603.956-2'}, {n:'Medel Ortega Maria José',c:'MEDEL ORTEGA MARIA JOSÉ',r:'22.149.949-2'}, {n:'Silva Garrido Juan Luis',c:'SILVA GARRIDO JUAN LUIS',r:'21.960.196-4'}, {n:'Valenzuela Vigas Benjamín Maximiliano',c:'VALENZUELA VIGAS BENJAMÍN MAXIMILIANO',r:'22.150.432-1'}],
+      '24': [{n:'Jara Irrazabal Emilio Alfonso',c:'JARA IRRAZABAL EMILIO ALFONSO',r:'22.112.210-0'}, {n:'Marín Mella Ignacia Francisca',c:'MARÍN MELLA IGNACIA FRANCISCA',r:'21.943.414-6'}, {n:'Soto Ramírez Martin Alfonso',c:'SOTO RAMÍREZ MARTIN ALFONSO',r:'22.192.360-K'}, {n:'Vilches Mardones César Abdón',c:'VILCHES MARDONES CÉSAR ABDÓN',r:'21.011.871-3'}],
+    },
+    CA: {
+      '1': [{n:'Arriaza Garrido Millaray Margarita',c:'ARRIAZA GARRIDO MILLARAY MARGARITA',r:'22.344.963-8'}, {n:'Hernandez Alvarado Kevin Josue',c:'HERNANDEZ ALVARADO KEVIN JOSUE',r:'27.530.142-6'}, {n:'Osorio Roa Trinidad Fabiola',c:'OSORIO ROA TRINIDAD FABIOLA',r:'22.212.499-9'}, {n:'Salvatierra Narciso Jasmin Marlen',c:'SALVATIERRA NARCISO JASMIN MARLEN',r:'22.214.444-2'}],
+      '2': [{n:'Alarcón Jeria Patricio Andrés',c:'ALARCÓN JERIA PATRICIO ANDRÉS',r:'22.220.918-8'}, {n:'Bascuñan Bascuñán María Belén',c:'BASCUÑAN BASCUÑÁN MARÍA BELÉN',r:'21.868.569-2'}, {n:'Ibarra González Fernando Octavio',c:'IBARRA GONZÁLEZ FERNANDO OCTAVIO',r:'22.185.113-7'}, {n:'Paiva Gonzales Jairo Josael',c:'PAIVA GONZALES JAIRO JOSAEL',r:'22.152.843-3'}, {n:'Venegas Durán Rocio de Jesus',c:'VENEGAS DURÁN ROCIO DE JESUS',r:'22.120.174-4'}],
+      '3': [{n:'Acevedo Pincheira Martina Paz del Carmen',c:'ACEVEDO PINCHEIRA MARTINA PAZ DEL CARMEN',r:'22.252.120-3'}, {n:'Castro Quevedo Diego Andrés',c:'CASTRO QUEVEDO DIEGO ANDRÉS',r:'21.547.059-8'}, {n:'Mofre Olivares Pola Fernanda',c:'MOFRE OLIVARES POLA FERNANDA',r:'21.857.283-9'}, {n:'Nur Manquelipe Nicolas Ibrahim Masmed',c:'NUR MANQUELIPE NICOLAS IBRAHIM MASMED',r:'22.155.994-0'}, {n:'Sánchez Valverde Briggitte Anaiz',c:'SÁNCHEZ VALVERDE BRIGGITTE ANAIZ',r:'22.368.006-2'}],
+      '4': [{n:'Alzola Garín Ignacio André',c:'ALZOLA GARÍN IGNACIO ANDRÉ',r:'22.116.298-6'}, {n:'Carrillo Gonzalez Avril Mia',c:'CARRILLO GONZALEZ AVRIL MIA',r:'26.401.710-6'}, {n:'González Sanhueza Héctor Fernando Isaac',c:'GONZÁLEZ SANHUEZA HÉCTOR FERNANDO ISAAC',r:'22.118.865-9'}, {n:'Peña Bastías Pía Almendra',c:'PEÑA BASTÍAS PÍA ALMENDRA',r:'22.218.122-4'}, {n:'Poblete Rojas Sofía Ignacia',c:'POBLETE ROJAS SOFÍA IGNACIA',r:'22.217.385-K'}],
+      '5': [{n:'Cobian González Aracelli Rayen',c:'COBIAN GONZÁLEZ ARACELLI RAYEN',r:'22.269.558-9'}, {n:'Correa González Jorge Luis',c:'CORREA GONZÁLEZ JORGE LUIS',r:'21.934.857-6'}, {n:'Fuentes Campos Matilde Antonia',c:'FUENTES CAMPOS MATILDE ANTONIA',r:'22.377.625-6'}, {n:'Jara Saldías Matías Alfonso',c:'JARA SALDÍAS MATÍAS ALFONSO',r:'21.331.728-8'}, {n:'Yáñez Vivanco Leticia Beatriz',c:'YÁÑEZ VIVANCO LETICIA BEATRIZ',r:'21.920.313-6'}],
+      '6': [{n:'Delgado Contreras Grecia Marina',c:'DELGADO CONTRERAS GRECIA MARINA',r:'26.008.883-1'}, {n:'Gotuzzo Martínez Enzo Francisco',c:'GOTUZZO MARTÍNEZ ENZO FRANCISCO',r:'21.853.819-3'}, {n:'Intriago Espinoza Sofia Carolina',c:'INTRIAGO ESPINOZA SOFIA CAROLINA',r:'22.204.801-K'}, {n:'Mariqueo Quimen Dylan Vicente',c:'MARIQUEO QUIMEN DYLAN VICENTE',r:'22.137.141-0'}, {n:'Sepúlveda Barra Elias Patricio',c:'SEPÚLVEDA BARRA ELIAS PATRICIO',r:'22.072.891-9'}],
+      '7': [{n:'Elgueda Targarona Lissi Victoria',c:'ELGUEDA TARGARONA LISSI VICTORIA',r:'22.335.071-2'}, {n:'González Cerna Valentina Isidora',c:'GONZÁLEZ CERNA VALENTINA ISIDORA',r:'22.109.983-4'}, {n:'Jang Taehwan',c:'JANG . TAEHWAN',r:'25.075.847-2'}, {n:'Martínez Catalán Mateo Antonio',c:'MARTÍNEZ CATALÁN MATEO ANTONIO',r:'21.906.217-6'}, {n:'Mesa Urrutia Victoria Belen',c:'MESA URRUTIA VICTORIA BELEN',r:'21.991.493-8'}],
+      '8': [{n:'Eluardo Parraguez Stephanie Trinidad',c:'ELUARDO PARRAGUEZ STEPHANIE TRINIDAD',r:'22.296.615-9'}, {n:'Jorquera Hernández Francisca Antonia',c:'JORQUERA HERNÁNDEZ FRANCISCA ANTONIA',r:'21.853.401-5'}, {n:'Molina Órdenes Julio Alexander',c:'MOLINA ÓRDENES JULIO ALEXANDER',r:'22.001.970-5'}, {n:'Ponce Pereira Lucas José',c:'PONCE PEREIRA LUCAS JOSÉ',r:'21.850.254-7'}, {n:'Saavedra Rojas Valentina Elimey Andrea',c:'SAAVEDRA ROJAS VALENTINA ELIMEY ANDREA',r:'21.667.391-3'}],
+      '9': [{n:'Esqueda Enrriquez Denis Alejandro',c:'ESQUEDA ENRRIQUEZ DENIS ALEJANDRO',r:'26.763.031-3'}, {n:'Flores Albornoz Daniela Andrea',c:'FLORES ALBORNOZ DANIELA ANDREA',r:'22.054.043-K'}, {n:'Mollo Callasaya Amira Catalina',c:'MOLLO CALLASAYA AMIRA CATALINA',r:'22.318.333-6'}, {n:'Quezada Manzano Mauricio Jhonatan',c:'QUEZADA MANZANO MAURICIO JHONATAN',r:'22.228.554-2'}, {n:'Silva Morales Daniela Paz',c:'SILVA MORALES DANIELA PAZ',r:'22.398.548-3'}],
+      '10': [{n:'Araya Caro Alicia Paz',c:'ARAYA CARO ALICIA PAZ',r:'21.684.357-6'}, {n:'Goo Lara Maureene Katrina',c:'GOO LARA MAUREENE KATRINA',r:'21.956.756-1'}, {n:'Reyes Espronceda Eliecer José',c:'REYES ESPRONCEDA ELIECER JOSÉ',r:'21.965.910-5'}, {n:'Riquelme Jorquera Giovanni Paolo',c:'RIQUELME JORQUERA GIOVANNI PAOLO',r:'22.347.871-9'}, {n:'Salinas Torres Paulette Anaís',c:'SALINAS TORRES PAULETTE ANAÍS',r:'22.193.278-1'}],
+      '11': [{n:'Llancafilo González Anaís Stefania',c:'LLANCAFILO GONZÁLEZ ANAÍS STEFANIA',r:'22.042.406-5'}, {n:'Masías Salinas Amanda Millaray',c:'MASÍAS SALINAS AMANDA MILLARAY',r:'22.357.545-5'}, {n:'Rojas Reyes José Ignacio',c:'ROJAS REYES JOSÉ IGNACIO',r:'22.233.813-1'}, {n:'Salazar Villegas Victor Manuel',c:'SALAZAR VILLEGAS VICTOR MANUEL',r:'26.512.191-8'}, {n:'Serrano Calderón Javiera Catalina',c:'SERRANO CALDERÓN JAVIERA CATALINA',r:'21.636.055-9'}],
+      '12': [{n:'Núñez Bustos Almendra Lucia de Jesus',c:'NÚÑEZ BUSTOS ALMENDRA LUCIA DE JESUS',r:'21.952.756-K'}, {n:'Perez Miramira Angie Solange',c:'PEREZ MIRAMIRA ANGIE SOLANGE',r:'22.051.206-1'}, {n:'Sandoval Sandoval Francisco Ignacio',c:'SANDOVAL SANDOVAL FRANCISCO IGNACIO',r:'22.331.972-6'}, {n:'Segura Vergara Benjamín Andrés',c:'SEGURA VERGARA BENJAMÍN ANDRÉS',r:'22.374.409-5'}, {n:'Sepúlveda Morales Alexander Máximo',c:'SEPÚLVEDA MORALES ALEXANDER MÁXIMO',r:'21.687.969-4'}, {n:'Urrutia Guevara Isabel Dayana',c:'URRUTIA GUEVARA ISABEL DAYANA',r:'21.537.635-4'}],
+    },
+  };
+
+const criterios = [
+    { key: 'desempeno', label: 'Desempeño', desc: 'Calidad y nivel del trabajo aportado en la preparación y ejecución del proyecto.', type: 'nota', low: '1,0 Deficiente', high: 'Excelente 7,0' },
+    { key: 'cumplimiento', label: 'Cumplimiento y responsabilidad', desc: 'Cumplió los compromisos y responsabilidades asumidos, respetando los plazos acordados.', type: 'nota', low: '1,0', high: '7,0' },
+    { key: 'equipo', label: 'Trabajo en equipo', desc: 'Colaboró de forma respetuosa, aportó ideas y ayudó a resolver los conflictos del grupo.', type: 'nota', low: '1,0', high: '7,0' },
+    { key: 'contribucion', label: '% de contribución', desc: 'Porcentaje de aporte real de esta persona al resultado final (evalúa a cada integrante por separado; no es necesario que sumen 100% entre todos). 100% = aporte pleno y coordinado.', type: 'pct', low: '0%', high: '100%' }
+  ];
+
+
+/* =========================================================================
+   ESTADO
+   ========================================================================= */
+let state = {
+  screen: 'inicio',
+  nombre: '', rut: '', carrera: '', grupo: '',
+  members: [], memberIndex: 0, ratings: {}, observaciones: '',
+  responses: [],          // resultados remotos (se llenan al entrar a "Resultados")
+  lastSubmitted: null,    // última evaluación enviada por este navegador
+  submitting: false, submitError: '',
+  resultLoading: false, resultError: ''
+};
+
+function setState(patch) { Object.assign(state, patch); render(); }
+
+/* =========================================================================
+   HELPERS
+   ========================================================================= */
+function notaFmt(v) { return Number(v).toFixed(1).replace('.', ','); }
+function pctFmt(v) { return Math.round(v) + '%'; }
+function initials(name) { return (name || '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase(); }
+function normRut(x) { return String(x || '').replace(/[.\-\s]/g, '').toUpperCase(); }
+function rutValido(x) { return normRut(x).length >= 7; }
+function gruposDe(carrera) { const g = roster[carrera]; return g ? Object.keys(g) : []; }
+function carreraLabelOf(code) { return (carreras.find(c => c.code === code) || {}).label || ''; }
+function notaColorFor(v) { if (v >= 6) return '#2a7d5b'; if (v >= 4) return '#2a4a7f'; return '#b25f3a'; }
+function escapeHtml(str) {
+  return String(str == null ? '' : str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+function titleCase(s) {
+  const low = new Set(['de', 'del', 'la', 'las', 'los', 'y', 'da', 'di']);
+  return s.toLowerCase().split(/\s+/).filter(Boolean).map((w, i) => {
+    if (i > 0 && low.has(w)) return w;
+    if (w.includes('-')) return w.split('-').map(p => p ? p[0].toUpperCase() + p.slice(1) : p).join('-');
+    return w ? w[0].toUpperCase() + w.slice(1) : w;
+  }).join(' ');
+}
+// Nómina viene "APELLIDO APELLIDO NOMBRE(S)" -> mostrar "Nombre(s) Apellidos"
+function displayName(canon) {
+  const clean = String(canon || '').replace(/\./g, ' ').replace(/\s+/g, ' ').trim();
+  const parts = clean.split(' ');
+  if (parts.length <= 2) return titleCase(clean);
+  const apellidos = parts.slice(0, 2);
+  const nombres = parts.slice(2);
+  return titleCase(nombres.concat(apellidos).join(' '));
+}
+
+/* =========================================================================
+   RESPALDO LOCAL (localStorage) — copia de seguridad por navegador,
+   NO es la fuente de verdad de "Resultados" (esa vive en la planilla).
+   ========================================================================= */
+const STORAGE_KEY = 'evalIntragrupal.local.v1';
+function loadLocal() {
+  try { const r = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); return Array.isArray(r) ? r : []; }
+  catch (e) { return []; }
+}
+function saveLocalAll(list) { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); } catch (e) {} }
+function saveLocalOne(resp) { const all = loadLocal(); all.push(resp); saveLocalAll(all); }
+function markLocalSynced(id) { saveLocalAll(loadLocal().map(r => r.id === id ? { ...r, synced: true } : r)); }
+
+/* =========================================================================
+   SINCRONIZACIÓN REMOTA (Google Sheets vía Apps Script)
+   ========================================================================= */
+/**
+ * Google Apps Script bajo cuentas institucionales (Workspace) frecuentemente
+ * NO entrega los headers CORS que fetch()/XHR necesitan, aun con el despliegue
+ * en "Cualquier usuario". Para evitar depender de eso por completo, leemos con
+ * JSONP (un <script> cargado dinámicamente — nunca sujeto a CORS) y escribimos
+ * con un formulario oculto enviado a un iframe invisible (una navegación real,
+ * tampoco sujeta a CORS). Después de escribir, verificamos por separado que el
+ * registro efectivamente llegó, reintentando unas pocas veces.
+ */
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = 'jsonp_cb_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const script = document.createElement('script');
+    let done = false;
+    const cleanup = () => { try { delete window[cbName]; } catch (e) {} script.remove(); };
+    window[cbName] = (data) => { done = true; cleanup(); resolve(data); };
+    script.onerror = () => { if (!done) { cleanup(); reject(new Error('JSONP_LOAD_ERROR')); } };
+    script.src = url + (url.includes('?') ? '&' : '?') + 'callback=' + cbName;
+    document.body.appendChild(script);
+    setTimeout(() => { if (!done) { cleanup(); reject(new Error('JSONP_TIMEOUT')); } }, 15000);
+  });
+}
+
+function submitViaHiddenForm(record) {
+  const iframeName = 'sync_iframe_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6);
+  const iframe = document.createElement('iframe');
+  iframe.name = iframeName;
+  iframe.style.display = 'none';
+  document.body.appendChild(iframe);
+
+  const form = document.createElement('form');
+  form.method = 'POST';
+  form.action = CONFIG.SHEET_WEBAPP_URL;
+  form.target = iframeName;
+  form.style.display = 'none';
+
+  const addField = (name, value) => {
+    const inp = document.createElement('input');
+    inp.type = 'hidden'; inp.name = name; inp.value = value;
+    form.appendChild(inp);
+  };
+  addField('action', 'append');
+  addField('payload', JSON.stringify(record));
+
+  document.body.appendChild(form);
+  form.submit();
+  setTimeout(() => { form.remove(); iframe.remove(); }, 5000);
+}
+
+function checkExists(id) {
+  return jsonp(CONFIG.SHEET_WEBAPP_URL + '?action=check&id=' + encodeURIComponent(id)).then(data => {
+    if (!data || data.ok !== true) throw new Error((data && data.error) || 'RESPUESTA_INVALIDA');
+    return !!data.exists;
+  });
+}
+
+async function syncOne(resp) {
+  if (!CONFIG.SHEET_WEBAPP_URL) throw new Error('NO_CONFIG');
+  submitViaHiddenForm(resp);
+  for (let i = 0; i < 6; i++) {
+    await new Promise(r => setTimeout(r, 1200));
+    try {
+      const exists = await checkExists(resp.id);
+      if (exists) return { ok: true };
+    } catch (e) { /* reintenta */ }
+  }
+  throw new Error('NO_CONFIRMADO');
+}
+
+function fetchRemoteAll(token) {
+  if (!CONFIG.SHEET_WEBAPP_URL) return Promise.reject(new Error('NO_CONFIG'));
+  const url = CONFIG.SHEET_WEBAPP_URL + '?action=list&token=' + encodeURIComponent(token || '');
+  return jsonp(url).then(data => {
+    if (!data || data.ok !== true) {
+      if (data && data.error === 'no autorizado') throw new Error('NO_AUTORIZADO');
+      throw new Error((data && data.error) || 'RESPUESTA_INVALIDA');
+    }
+    return data.records || [];
+  });
+}
+
+const TEACHER_TOKEN_KEY = 'evalIntragrupal.teacherToken';
+async function ensureTeacherToken() {
+  let t = localStorage.getItem(TEACHER_TOKEN_KEY);
+  if (!t) {
+    t = prompt('Ingresa la clave de docente para ver los resultados:');
+    if (t) localStorage.setItem(TEACHER_TOKEN_KEY, t);
+  }
+  return t || '';
+}
+
+function friendlySyncError(err) {
+  const m = String(err && err.message);
+  if (m === 'NO_CONFIG') return 'La app aún no está conectada a la planilla (falta configurar SHEET_WEBAPP_URL). Revisa INSTRUCCIONES.md.';
+  if (m === 'NO_CONFIRMADO') return 'Se envió, pero no pudimos confirmar que llegó a la planilla todavía. Presiona Reintentar (no se duplicará si ya había llegado).';
+  if (m === 'NO_AUTORIZADO') return 'Clave de docente incorrecta. Presiona Actualizar para ingresarla de nuevo.';
+  return 'No se pudo conectar con la planilla. Revisa tu conexión e inténtalo de nuevo.';
+}
+
+/* =========================================================================
+   ACCIONES
+   ========================================================================= */
+function startEval() {
+  const { carrera, grupo } = state;
+  const raw = (roster[carrera] && roster[carrera][grupo]) ? roster[carrera][grupo] : [];
+  if (!raw.length) return;
+  const members = raw.map(m => ({ name: displayName(m.c), canon: m.c, rut: m.r }));
+  const ratings = {};
+  members.forEach(m => ratings[m.canon] = { desempeno: 4, cumplimiento: 4, equipo: 4, contribucion: 100 });
+  setState({ members, ratings, memberIndex: 0, screen: 'eval' });
+  window.scrollTo({ top: 0 });
+}
+
+function setCurrentRating(key, val) {
+  const m = state.members[state.memberIndex];
+  state.ratings[m.canon] = { ...state.ratings[m.canon], [key]: val };
+}
+
+function nextMember() {
+  const i = state.memberIndex;
+  if (i < state.members.length - 1) setState({ memberIndex: i + 1 });
+  else setState({ screen: 'observaciones' });
+  window.scrollTo({ top: 0 });
+}
+function prevMember() {
+  const i = state.memberIndex;
+  if (i > 0) setState({ memberIndex: i - 1 });
+  else setState({ screen: 'inicio' });
+  window.scrollTo({ top: 0 });
+}
+
+async function submit() {
+  const { nombre, rut, carrera, grupo, members, ratings, observaciones } = state;
+  const resp = {
+    id: Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+    ts: new Date().toISOString(),
+    nombre, rut, carrera, grupo,
+    members: members.map(m => ({ name: m.name, canon: m.canon, rut: m.rut })),
+    ratings: JSON.parse(JSON.stringify(ratings)),
+    observaciones
+  };
+  saveLocalOne({ ...resp, synced: false });
+  setState({ submitting: true, submitError: '', lastSubmitted: resp });
+  try {
+    await syncOne(resp);
+    markLocalSynced(resp.id);
+    setState({ submitting: false, submitError: '', screen: 'enviado' });
+  } catch (err) {
+    setState({ submitting: false, submitError: friendlySyncError(err) });
+  }
+}
+
+function retrySubmit() {
+  if (!state.lastSubmitted) return;
+  setState({ submitting: true, submitError: '' });
+  syncOne(state.lastSubmitted).then(() => {
+    markLocalSynced(state.lastSubmitted.id);
+    setState({ submitting: false, submitError: '', screen: 'enviado' });
+  }).catch(err => setState({ submitting: false, submitError: friendlySyncError(err) }));
+}
+
+function restart() {
+  setState({ screen: 'inicio', nombre: '', rut: '', carrera: '', grupo: '', members: [], ratings: {}, observaciones: '', memberIndex: 0, submitError: '' });
+}
+
+function downloadOwn() {
+  const last = state.lastSubmitted;
+  if (!last) return;
+  downloadFile('mi_evaluacion.csv', '\ufeff' + toCSV(csvRows([last])), 'text/csv;charset=utf-8');
+}
+
+function downloadFile(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
+}
+function csvRows(responses) {
+  const head = ['Fecha', 'Evaluador', 'RUT evaluador', 'Carrera', 'Grupo', 'Integrante evaluado', 'RUT integrante', 'Desempeño', 'Cumplimiento', 'Trabajo en equipo', 'Nota criterios', '% contribución', 'Observaciones grupo'];
+  const rows = [head];
+  for (const r of responses) {
+    const info = {};
+    (r.members || []).forEach(m => info[m.canon] = m);
+    for (const [canon, rt] of Object.entries(r.ratings || {})) {
+      const mi = info[canon] || { name: canon, rut: '' };
+      const nota = (Number(rt.desempeno) + Number(rt.cumplimiento) + Number(rt.equipo)) / 3;
+      rows.push([(r.ts || '').slice(0, 10), r.nombre, r.rut || '', carreraLabelOf(r.carrera), r.grupo, mi.name, mi.rut || '', notaFmt(rt.desempeno), notaFmt(rt.cumplimiento), notaFmt(rt.equipo), notaFmt(nota), Math.round(rt.contribucion) + '%', (r.observaciones || '').replace(/\s+/g, ' ').trim()]);
+    }
+  }
+  return rows;
+}
+function toCSV(rows) {
+  return rows.map(row => row.map(c => { const s = String(c == null ? '' : c); return /[",;\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(';')).join('\n');
+}
+function exportCSV() { downloadFile('evaluaciones_intragrupales.csv', '\ufeff' + toCSV(csvRows(state.responses)), 'text/csv;charset=utf-8'); }
+function finalCsvRows() {
+  const head = ['Carrera', 'Grupo', 'Integrante', 'RUT', 'N° evaluadores', 'Desempeño promedio', 'Cumplimiento promedio', 'Trabajo en equipo promedio', 'Nota final', '% contribución promedio'];
+  const rows = [head];
+  aggregate().forEach(g => {
+    g.members.forEach(m => {
+      rows.push([carreraLabelOf(g.carrera), g.grupo, m.name, m.rut, m.count, m.desempeno, m.cumplimiento, m.equipo, m.notaFinal, m.contribucion]);
+    });
+  });
+  return rows;
+}
+function exportFinalCSV() { downloadFile('notas_finales.csv', '\ufeff' + toCSV(finalCsvRows()), 'text/csv;charset=utf-8'); }
+function exportJSON() { downloadFile('respaldo_evaluaciones.json', JSON.stringify(state.responses, null, 2), 'application/json'); }
+
+async function importJSONFile(file) {
+  if (!file) return;
+  const text = await file.text();
+  let imported;
+  try { imported = JSON.parse(text); } catch (e) { alert('El archivo no es un JSON válido.'); return; }
+  if (!Array.isArray(imported)) { alert('El respaldo debe ser una lista de evaluaciones.'); return; }
+  setState({ resultLoading: true, resultError: '' });
+  let okCount = 0, failCount = 0;
+  for (const rec of imported) {
+    try { await syncOne(rec); okCount++; } catch (e) { failCount++; }
+  }
+  await refreshResultados();
+  alert('Importación completa: ' + okCount + ' registradas' + (failCount ? ', ' + failCount + ' con error' : '') + '.');
+}
+
+function aggregate() {
+  const map = {};
+  for (const r of state.responses) {
+    const gk = r.carrera + '|' + r.grupo;
+    if (!map[gk]) map[gk] = { carrera: r.carrera, grupo: r.grupo, key: gk, evaluators: 0, members: {}, obs: [] };
+    map[gk].evaluators++;
+    if (r.observaciones && r.observaciones.trim()) map[gk].obs.push(r.observaciones.trim());
+    const info = {};
+    (r.members || []).forEach(m => info[m.canon] = m);
+    for (const [canon, rt] of Object.entries(r.ratings || {})) {
+      const mi = info[canon] || { name: canon, canon, rut: '' };
+      if (!map[gk].members[canon]) map[gk].members[canon] = { name: mi.name, rut: mi.rut, cnt: 0, d: 0, c: 0, e: 0, pct: 0, nota: 0 };
+      const mm = map[gk].members[canon];
+      const nota = (Number(rt.desempeno) + Number(rt.cumplimiento) + Number(rt.equipo)) / 3;
+      mm.nota += nota; mm.d += Number(rt.desempeno); mm.c += Number(rt.cumplimiento); mm.e += Number(rt.equipo); mm.pct += Number(rt.contribucion); mm.cnt++;
+    }
+  }
+  return Object.values(map).map(g => {
+    const members = Object.values(g.members).map(m => {
+      const nf = m.nota / m.cnt;
+      return { name: m.name, rut: m.rut, count: m.cnt, desempeno: notaFmt(m.d / m.cnt), cumplimiento: notaFmt(m.c / m.cnt), equipo: notaFmt(m.e / m.cnt), notaFinal: notaFmt(nf), notaFinalNum: nf, notaColor: notaColorFor(nf), contribucion: pctFmt(m.pct / m.cnt) };
+    }).sort((a, b) => a.name.localeCompare(b.name));
+    const notaGrupo = members.length ? notaFmt(members.reduce((s, m) => s + m.notaFinalNum, 0) / members.length) : '—';
+    return { title: carreraLabelOf(g.carrera) + ' · Grupo ' + g.grupo, carrera: g.carrera, grupo: g.grupo, evaluators: g.evaluators, members, notaGrupo, obs: g.obs, obsCount: g.obs.length, hasObs: g.obs.length > 0 };
+  }).sort((a, b) => a.title.localeCompare(b.title));
+}
+
+async function goResultados() {
+  setState({ screen: 'resultados' });
+  await refreshResultados();
+}
+async function refreshResultados() {
+  const token = await ensureTeacherToken();
+  if (!token) { setState({ resultLoading: false, resultError: 'Necesitas la clave de docente para ver resultados.' }); return; }
+  setState({ resultLoading: true, resultError: '' });
+  try {
+    const records = await fetchRemoteAll(token);
+    setState({ responses: records, resultLoading: false });
+  } catch (err) {
+    if (String(err.message) === 'NO_AUTORIZADO') localStorage.removeItem(TEACHER_TOKEN_KEY);
+    setState({ resultLoading: false, resultError: friendlySyncError(err) });
+  }
+}
+function goInicio() { setState({ screen: 'inicio' }); }
+
+/* =========================================================================
+   RENDER
+   ========================================================================= */
+function render() {
+  const el = document.getElementById('app');
+  el.innerHTML = `
+    <div style="min-height:100vh; display:flex; flex-direction:column;">
+      ${renderHeader()}
+      <div style="flex:1; display:flex; justify-content:center; padding:32px 20px 64px;">
+        ${renderScreen()}
+      </div>
+    </div>`;
+}
+
+function renderScreen() {
+  switch (state.screen) {
+    case 'inicio': return renderInicio();
+    case 'eval': return renderEval();
+    case 'observaciones': return renderObservaciones();
+    case 'revision': return renderRevision();
+    case 'enviado': return renderEnviado();
+    case 'resultados': return renderResultados();
+    default: return '';
+  }
+}
+
+function renderHeader() {
+  return `
+    <div style="background:#22365c; color:#fff; padding:18px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px;">
+      <div style="display:flex; flex-direction:column; gap:2px;">
+        <div style="font-family:'Source Serif 4', serif; font-size:19px; font-weight:600; letter-spacing:0.2px;">Evaluación Intragrupal</div>
+        <div style="font-size:12px; color:#b9c4dc; letter-spacing:0.3px;">Taller de Integración Profesional</div>
+      </div>
+      <button data-action="goResultados" style="background:rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.25); border-radius:999px; padding:8px 16px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">Resultados</button>
+    </div>`;
+}
+
+function renderInicio() {
+  const s = state;
+  const grupos = s.carrera ? gruposDe(s.carrera) : [];
+  const membersExist = !!(roster[s.carrera] && roster[s.carrera][s.grupo]);
+  const chipBase = 'flex:0 0 auto; border-radius:10px; padding:11px 18px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer; transition:all .15s; border-width:1px;';
+  const chipOn = chipBase + ' background:#22365c; color:#fff; border:1px solid #22365c;';
+  const chipOff = chipBase + ' background:#faf9f5; color:#3a3527; border:1px solid #d8d2c4;';
+  const previewMembers = membersExist ? roster[s.carrera][s.grupo].map(m => ({ name: displayName(m.c) })) : [];
+  const startOk = s.nombre.trim() && rutValido(s.rut) && s.carrera && s.grupo && membersExist;
+
+  const carreraChips = carreras.map(c => `<button data-action="selectCarrera" data-code="${c.code}" style="${s.carrera === c.code ? chipOn : chipOff}">${escapeHtml(c.label)}</button>`).join('');
+  const grupoChips = grupos.map(g => `<button data-action="selectGrupo" data-grupo="${g}" style="${s.grupo === g ? chipOn : chipOff}">Grupo ${g}</button>`).join('');
+  const rosterHtml = previewMembers.map(m => `<div style="font-size:14.5px; color:#2c2a22;">${escapeHtml(m.name)}</div>`).join('');
+
+  return `
+    <div style="width:100%; max-width:620px;">
+      <div style="background:#fff; border:1px solid #e2ddd2; border-radius:14px; padding:34px 32px; box-shadow:0 1px 2px rgba(30,40,60,0.04);">
+        <div style="font-family:'Source Serif 4', serif; font-size:26px; font-weight:600; line-height:1.2; margin-bottom:10px;">Evalúa a tu equipo</div>
+        <p style="font-size:14.5px; line-height:1.6; color:#5c5648; margin:0 0 26px;">Esta evaluación es <strong>personal, confidencial y anónima</strong> entre compañeros. Identifícate y calificarás a cada integrante de tu grupo según cuatro criterios.</p>
+
+        <label style="display:block; font-size:13px; font-weight:600; color:#3a3527; margin-bottom:7px;">Tu nombre</label>
+        <input id="nombre-input" type="text" value="${escapeHtml(s.nombre)}" data-action="nombreInput" placeholder="Ej: Pérez González Juan" style="width:100%; padding:12px 14px; border:1px solid #d8d2c4; border-radius:9px; font-family:inherit; font-size:15px; color:#212b3b; background:#faf9f5; margin-bottom:6px;">
+        <div style="font-size:13px; color:#3a3527; font-weight:700; margin-bottom:22px;">Apellido paterno + apellido materno + primer nombre</div>
+
+        <label style="display:block; font-size:13px; font-weight:600; color:#3a3527; margin-bottom:7px;">Tu RUT</label>
+        <input id="rut-input" type="text" value="${escapeHtml(s.rut)}" data-action="rutInput" placeholder="12345678-9" style="width:100%; padding:12px 14px; border:1px solid #d8d2c4; border-radius:9px; font-family:inherit; font-size:15px; color:#212b3b; background:#faf9f5; margin-bottom:6px;">
+        <div style="font-size:13px; color:#3a3527; font-weight:700; margin-bottom:22px;">Sin puntos y con guión (ej: 12345678-9)</div>
+
+        <label style="display:block; font-size:13px; font-weight:600; color:#3a3527; margin-bottom:9px;">Carrera</label>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:22px;">${carreraChips}</div>
+
+        ${s.carrera ? `
+        <div>
+          <label style="display:block; font-size:13px; font-weight:600; color:#3a3527; margin-bottom:9px;">Número de grupo</label>
+          <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:24px;">${grupoChips}</div>
+        </div>` : ''}
+
+        ${membersExist ? `
+        <div style="background:#f4f1ea; border:1px solid #e6e0d3; border-radius:10px; padding:16px 18px; margin-bottom:24px;">
+          <div style="font-size:12px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:#8a8270; margin-bottom:10px;">Integrantes que evaluarás</div>
+          <div style="display:flex; flex-direction:column; gap:6px;">${rosterHtml}</div>
+        </div>` : ''}
+
+        <button id="start-btn" data-action="startEval" ${startOk ? '' : 'disabled'} style="width:100%; border:none; border-radius:10px; padding:14px; font-family:inherit; font-size:15px; font-weight:700; cursor:${startOk ? 'pointer' : 'not-allowed'}; background:${startOk ? '#2a4a7f' : '#c7cdd6'}; color:#fff;">Comenzar evaluación →</button>
+      </div>
+    </div>`;
+}
+
+function renderEval() {
+  const s = state;
+  const currentMemberObj = s.members[s.memberIndex] || null;
+  const currentMember = currentMemberObj ? currentMemberObj.name : '';
+  const curR = (currentMemberObj && s.ratings[currentMemberObj.canon]) || {};
+  const membersCount = s.members.length;
+  const isLast = s.memberIndex === membersCount - 1;
+  const progressPct = Math.round((s.memberIndex / Math.max(membersCount, 1)) * 100) + '%';
+  const isSelf = !!(currentMemberObj && ((rutValido(s.rut) && normRut(currentMemberObj.rut) === normRut(s.rut)) || (s.nombre.trim() && currentMemberObj.name.toLowerCase() === s.nombre.trim().toLowerCase())));
+
+  const criteriosHtml = criterios.map(c => {
+    const v = curR[c.key];
+    const display = c.type === 'pct' ? pctFmt(v) : notaFmt(v);
+    const min = c.type === 'pct' ? 0 : 1, max = c.type === 'pct' ? 100 : 7, step = c.type === 'pct' ? 5 : 0.1;
+    return `
+      <div style="padding:18px 0; border-bottom:1px solid #f1ece0;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:4px;">
+          <div style="font-size:15.5px; font-weight:600; color:#23324d;">${escapeHtml(c.label)}</div>
+          <div id="crit-display-${c.key}" style="font-family:'Source Serif 4', serif; font-size:22px; font-weight:700; color:#2a4a7f; min-width:58px; text-align:right;">${display}</div>
+        </div>
+        <div style="font-size:13px; line-height:1.5; color:#6b6456; margin-bottom:14px;">${escapeHtml(c.desc)}</div>
+        <input type="range" min="${min}" max="${max}" step="${step}" value="${v}" data-action="ratingInput" data-key="${c.key}" style="width:100%; height:22px; cursor:pointer;">
+        <div style="display:flex; justify-content:space-between; font-size:11.5px; color:#a49a85; margin-top:2px;">
+          <span>${escapeHtml(c.low)}</span><span>${escapeHtml(c.high)}</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div style="width:100%; max-width:640px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+        <div style="font-size:12.5px; font-weight:600; letter-spacing:0.4px; text-transform:uppercase; color:#8a8270;">Integrante ${s.memberIndex + 1} de ${membersCount}</div>
+        <div style="font-size:12.5px; color:#8a8270;">${escapeHtml(carreraLabelOf(s.carrera))} · Grupo ${escapeHtml(s.grupo)}</div>
+      </div>
+      <div style="height:6px; background:#e2ddd2; border-radius:999px; overflow:hidden; margin-bottom:22px;">
+        <div style="height:100%; background:#2a4a7f; border-radius:999px; width:${progressPct};"></div>
+      </div>
+
+      <div style="background:#fff; border:1px solid #e2ddd2; border-radius:14px; padding:28px 28px 30px; box-shadow:0 1px 2px rgba(30,40,60,0.04);">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:6px;">
+          <div style="width:42px; height:42px; border-radius:50%; background:#22365c; color:#fff; display:flex; align-items:center; justify-content:center; font-family:'Source Serif 4', serif; font-size:17px; font-weight:600;">${escapeHtml(initials(currentMember))}</div>
+          <div>
+            <div style="font-family:'Source Serif 4', serif; font-size:21px; font-weight:600; line-height:1.1;">${escapeHtml(currentMember)}</div>
+            ${isSelf ? `<div style="font-size:12px; color:#2a7d5b; font-weight:600; margin-top:2px;">Autoevaluación</div>` : ''}
+          </div>
+        </div>
+
+        <div style="height:1px; background:#eee7d9; margin:20px 0 6px;"></div>
+
+        ${criteriosHtml}
+
+        <div style="display:flex; gap:12px; margin-top:24px;">
+          <button data-action="prevMember" style="flex:0 0 auto; background:#fff; color:#4a4636; border:1px solid #d8d2c4; border-radius:10px; padding:13px 20px; font-family:inherit; font-size:14.5px; font-weight:600; cursor:pointer;">← Atrás</button>
+          <button data-action="nextMember" style="flex:1; background:#2a4a7f; color:#fff; border:none; border-radius:10px; padding:13px 20px; font-family:inherit; font-size:14.5px; font-weight:600; cursor:pointer;">${isLast ? 'Continuar →' : 'Siguiente →'}</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderObservaciones() {
+  const s = state;
+  return `
+    <div style="width:100%; max-width:620px;">
+      <div style="background:#fff; border:1px solid #e2ddd2; border-radius:14px; padding:32px; box-shadow:0 1px 2px rgba(30,40,60,0.04);">
+        <div style="font-family:'Source Serif 4', serif; font-size:23px; font-weight:600; margin-bottom:8px;">Observaciones del grupo</div>
+        <p style="font-size:14px; line-height:1.6; color:#5c5648; margin:0 0 20px;">Opcional. Comenta cómo funcionó el equipo, dificultades o aspectos a destacar. Solo lo verá el equipo docente.</p>
+        <textarea data-action="obsInput" placeholder="Escribe aquí (opcional)…" style="width:100%; min-height:150px; padding:14px; border:1px solid #d8d2c4; border-radius:10px; font-family:inherit; font-size:15px; line-height:1.5; color:#212b3b; background:#faf9f5; resize:vertical;">${escapeHtml(s.observaciones)}</textarea>
+        <div style="display:flex; gap:12px; margin-top:22px;">
+          <button data-action="backToEval" style="flex:0 0 auto; background:#fff; color:#4a4636; border:1px solid #d8d2c4; border-radius:10px; padding:13px 20px; font-family:inherit; font-size:14.5px; font-weight:600; cursor:pointer;">← Atrás</button>
+          <button data-action="goRevision" style="flex:1; background:#2a4a7f; color:#fff; border:none; border-radius:10px; padding:13px 20px; font-family:inherit; font-size:14.5px; font-weight:600; cursor:pointer;">Revisar y enviar →</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderRevision() {
+  const s = state;
+  const reviewMembers = s.members.map(m => {
+    const rt = s.ratings[m.canon] || {};
+    const nota = (Number(rt.desempeno) + Number(rt.cumplimiento) + Number(rt.equipo)) / 3;
+    return { name: m.name, nota: notaFmt(nota), contribucion: pctFmt(rt.contribucion), desempeno: notaFmt(rt.desempeno), cumplimiento: notaFmt(rt.cumplimiento), equipo: notaFmt(rt.equipo) };
+  });
+  const rows = reviewMembers.map(m => `
+    <div style="border:1px solid #ece6d8; border-radius:11px; padding:15px 17px; margin-bottom:12px; background:#faf9f5;">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:10px;">
+        <div style="font-size:15.5px; font-weight:600; color:#23324d;">${escapeHtml(m.name)}</div>
+        <div style="display:flex; align-items:center; gap:10px;">
+          <div style="font-family:'Source Serif 4', serif; font-size:20px; font-weight:700; color:#2a4a7f;">${m.nota}</div>
+          <div style="font-size:12px; color:#6b6456; background:#eef1f6; border-radius:6px; padding:3px 8px; font-weight:600;">${m.contribucion}</div>
+        </div>
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px 16px; font-size:12.5px; color:#6b6456;">
+        <span>Desempeño <strong style="color:#3a3527;">${m.desempeno}</strong></span>
+        <span>Cumplimiento <strong style="color:#3a3527;">${m.cumplimiento}</strong></span>
+        <span>Trabajo en equipo <strong style="color:#3a3527;">${m.equipo}</strong></span>
+      </div>
+    </div>`).join('');
+
+  const errorBanner = s.submitError ? `
+    <div style="background:#fbeee7; border:1px solid #e6c3ac; color:#7a3a1a; border-radius:10px; padding:12px 14px; font-size:13.5px; margin-top:16px; display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+      <span>${escapeHtml(s.submitError)}</span>
+      <button data-action="retrySubmit" style="background:#fff; color:#7a3a1a; border:1px solid #e6c3ac; border-radius:8px; padding:7px 14px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">Reintentar</button>
+    </div>` : '';
+
+  return `
+    <div style="width:100%; max-width:680px;">
+      <div style="background:#fff; border:1px solid #e2ddd2; border-radius:14px; padding:32px; box-shadow:0 1px 2px rgba(30,40,60,0.04);">
+        <div style="font-family:'Source Serif 4', serif; font-size:23px; font-weight:600; margin-bottom:4px;">Revisa tu evaluación</div>
+        <p style="font-size:13.5px; color:#7a7362; margin:0 0 22px;">Nota = promedio de Desempeño, Cumplimiento y Trabajo en equipo.</p>
+        ${rows}
+        <div style="display:flex; gap:12px; margin-top:20px;">
+          <button data-action="backToObs" style="flex:0 0 auto; background:#fff; color:#4a4636; border:1px solid #d8d2c4; border-radius:10px; padding:13px 20px; font-family:inherit; font-size:14.5px; font-weight:600; cursor:pointer;">← Atrás</button>
+          <button data-action="submit" ${s.submitting ? 'disabled' : ''} style="flex:1; background:#2a7d5b; color:#fff; border:none; border-radius:10px; padding:13px 20px; font-family:inherit; font-size:15px; font-weight:700; cursor:${s.submitting ? 'default' : 'pointer'};">${s.submitting ? 'Enviando…' : 'Enviar evaluación ✓'}</button>
+        </div>
+        ${errorBanner}
+      </div>
+    </div>`;
+}
+
+function renderEnviado() {
+  return `
+    <div style="width:100%; max-width:520px; text-align:center;">
+      <div style="background:#fff; border:1px solid #e2ddd2; border-radius:14px; padding:44px 34px; box-shadow:0 1px 2px rgba(30,40,60,0.04);">
+        <div style="width:62px; height:62px; border-radius:50%; background:#e6f2ec; color:#2a7d5b; display:flex; align-items:center; justify-content:center; font-size:30px; margin:0 auto 20px;">✓</div>
+        <div style="font-family:'Source Serif 4', serif; font-size:24px; font-weight:600; margin-bottom:10px;">¡Evaluación enviada!</div>
+        <p style="font-size:14.5px; line-height:1.6; color:#5c5648; margin:0 0 26px;">Gracias. Tu evaluación quedó registrada de forma anónima.</p>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <button data-action="downloadOwn" style="background:#fff; color:#2a4a7f; border:1px solid #c3cede; border-radius:10px; padding:12px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;">Descargar mi evaluación (CSV)</button>
+          <button data-action="restart" style="background:#2a4a7f; color:#fff; border:none; border-radius:10px; padding:12px; font-family:inherit; font-size:14px; font-weight:600; cursor:pointer;">Nueva evaluación</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderResultados() {
+  const s = state;
+  const aggGroups = aggregate();
+  const hasResults = aggGroups.length > 0;
+
+  let body;
+  if (s.resultLoading) {
+    body = `<div style="background:#fff; border:1px dashed #d8d2c4; border-radius:14px; padding:54px 30px; text-align:center;"><div style="font-size:15px; color:#8a8270;">Cargando resultados…</div></div>`;
+  } else if (s.resultError) {
+    body = `<div style="background:#fbeee7; border:1px solid #e6c3ac; color:#7a3a1a; border-radius:14px; padding:30px; text-align:center;">
+      <div style="font-size:15px; margin-bottom:14px;">${escapeHtml(s.resultError)}</div>
+      <button data-action="refreshResultados" style="background:#fff; color:#7a3a1a; border:1px solid #e6c3ac; border-radius:8px; padding:9px 16px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">Reintentar</button>
+    </div>`;
+  } else if (!hasResults) {
+    body = `<div style="background:#fff; border:1px dashed #d8d2c4; border-radius:14px; padding:54px 30px; text-align:center;"><div style="font-size:15px; color:#8a8270;">Aún no hay evaluaciones registradas.</div></div>`;
+  } else {
+    body = aggGroups.map(g => {
+      const memberRows = g.members.map(m => `
+        <div style="display:grid; grid-template-columns:1.9fr 1.1fr 0.85fr 0.85fr 0.85fr 1.05fr 0.9fr; gap:8px; padding:11px 10px; align-items:center; border-bottom:1px solid #f2ecdf;">
+          <div style="font-size:14.5px; font-weight:600; color:#23324d;">${escapeHtml(m.name)}</div>
+          <div style="font-size:12.5px; color:#8a8270; font-variant-numeric:tabular-nums;">${escapeHtml(m.rut)}</div>
+          <div style="text-align:center; font-size:14px; color:#4a4636;">${m.desempeno}</div>
+          <div style="text-align:center; font-size:14px; color:#4a4636;">${m.cumplimiento}</div>
+          <div style="text-align:center; font-size:14px; color:#4a4636;">${m.equipo}</div>
+          <div style="text-align:center;"><span style="display:inline-block; font-family:'Source Serif 4', serif; font-size:16px; font-weight:700; color:#fff; background:${m.notaColor}; border-radius:7px; padding:3px 11px;">${m.notaFinal}</span></div>
+          <div style="text-align:center; font-size:14px; color:#4a4636; font-weight:600;">${m.contribucion}</div>
+        </div>`).join('');
+
+      const obsHtml = g.hasObs ? `
+        <div style="margin-top:16px; background:#f6f4ee; border-radius:10px; padding:14px 16px;">
+          <div style="font-size:11px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:#8a8270; margin-bottom:8px;">Observaciones (${g.obsCount})</div>
+          ${g.obs.map(o => `<div style="font-size:13.5px; line-height:1.5; color:#524d3f; padding:5px 0; border-top:1px solid #ece6d8;">${escapeHtml(o)}</div>`).join('')}
+        </div>` : '';
+
+      return `
+        <div style="background:#fff; border:1px solid #e2ddd2; border-radius:14px; padding:22px 24px; margin-bottom:18px; box-shadow:0 1px 2px rgba(30,40,60,0.04);">
+          <div style="display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:8px; margin-bottom:16px;">
+            <div style="font-family:'Source Serif 4', serif; font-size:19px; font-weight:600;">${escapeHtml(g.title)}</div>
+            <div style="font-size:13px; color:#7a7362;">${g.evaluators} evaluadores · promedio grupo <strong style="color:#2a4a7f; font-size:15px;">${g.notaGrupo}</strong></div>
+          </div>
+          <div style="overflow-x:auto;">
+            <div style="min-width:760px;">
+              <div style="display:grid; grid-template-columns:1.9fr 1.1fr 0.85fr 0.85fr 0.85fr 1.05fr 0.9fr; gap:8px; padding:8px 10px; font-size:11px; font-weight:700; letter-spacing:0.4px; text-transform:uppercase; color:#8a8270; border-bottom:1px solid #e8e2d4;">
+                <div>Integrante</div><div>RUT</div><div style="text-align:center;">Desemp.</div><div style="text-align:center;">Cumpl.</div><div style="text-align:center;">Equipo</div><div style="text-align:center;">Nota final</div><div style="text-align:center;">% Contrib.</div>
+              </div>
+              ${memberRows}
+            </div>
+          </div>
+          ${obsHtml}
+        </div>`;
+    }).join('');
+  }
+
+  return `
+    <div style="width:100%; max-width:1040px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <div>
+          <div style="font-family:'Source Serif 4', serif; font-size:24px; font-weight:600;">Resultados por grupo</div>
+          <div style="font-size:13px; color:#7a7362; margin-top:3px;">${s.responses.length} evaluaciones registradas · modo docente</div>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button data-action="refreshResultados" style="background:#fff; color:#4a4636; border:1px solid #d8d2c4; border-radius:9px; padding:10px 16px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">↻ Actualizar</button>
+          <button data-action="exportFinalCSV" style="background:#2a4a7f; color:#fff; border:none; border-radius:9px; padding:10px 16px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">Exportar notas finales</button>
+          <button data-action="exportCSV" style="background:#2a7d5b; color:#fff; border:none; border-radius:9px; padding:10px 16px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">Exportar detalle CSV</button>
+          <button data-action="exportJSON" style="background:#fff; color:#4a4636; border:1px solid #d8d2c4; border-radius:9px; padding:10px 16px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">Exportar respaldo</button>
+          <label style="background:#fff; color:#4a4636; border:1px solid #d8d2c4; border-radius:9px; padding:10px 16px; font-size:13px; font-weight:600; cursor:pointer;">Importar respaldo<input type="file" accept="application/json,.json" data-action="importJSON" style="display:none;"></label>
+          <button data-action="goInicio" style="background:#fff; color:#4a4636; border:1px solid #d8d2c4; border-radius:9px; padding:10px 16px; font-family:inherit; font-size:13px; font-weight:600; cursor:pointer;">← Volver</button>
+        </div>
+      </div>
+      ${body}
+    </div>`;
+}
+
+/* =========================================================================
+   DELEGACIÓN DE EVENTOS
+   ========================================================================= */
+function patchStartButton() {
+  const s = state;
+  const membersExist = !!(roster[s.carrera] && roster[s.carrera][s.grupo]);
+  const startOk = s.nombre.trim() && rutValido(s.rut) && s.carrera && s.grupo && membersExist;
+  const btn = document.getElementById('start-btn');
+  if (!btn) return;
+  btn.disabled = !startOk;
+  btn.style.cursor = startOk ? 'pointer' : 'not-allowed';
+  btn.style.background = startOk ? '#2a4a7f' : '#c7cdd6';
+}
+
+function onAppClick(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  switch (action) {
+    case 'goResultados': goResultados(); break;
+    case 'selectCarrera': setState({ carrera: el.dataset.code, grupo: '' }); break;
+    case 'selectGrupo': setState({ grupo: el.dataset.grupo }); break;
+    case 'startEval': if (!el.disabled) startEval(); break;
+    case 'prevMember': prevMember(); break;
+    case 'nextMember': nextMember(); break;
+    case 'backToEval': setState({ screen: 'eval' }); break;
+    case 'goRevision': setState({ screen: 'revision' }); break;
+    case 'backToObs': setState({ screen: 'observaciones' }); break;
+    case 'submit': if (!el.disabled) submit(); break;
+    case 'retrySubmit': retrySubmit(); break;
+    case 'downloadOwn': downloadOwn(); break;
+    case 'restart': restart(); break;
+    case 'exportCSV': exportCSV(); break;
+    case 'exportFinalCSV': exportFinalCSV(); break;
+    case 'exportJSON': exportJSON(); break;
+    case 'refreshResultados': refreshResultados(); break;
+    case 'goInicio': goInicio(); break;
+  }
+}
+
+function onAppInput(e) {
+  const el = e.target;
+  if (!el.dataset) return;
+  const action = el.dataset.action;
+  if (action === 'nombreInput') { state.nombre = el.value; patchStartButton(); }
+  else if (action === 'rutInput') { state.rut = el.value; patchStartButton(); }
+  else if (action === 'obsInput') { state.observaciones = el.value; }
+  else if (action === 'ratingInput') {
+    const key = el.dataset.key;
+    const val = parseFloat(el.value);
+    setCurrentRating(key, val);
+    const meta = criterios.find(c => c.key === key);
+    const display = meta.type === 'pct' ? pctFmt(val) : notaFmt(val);
+    const labelEl = document.getElementById('crit-display-' + key);
+    if (labelEl) labelEl.textContent = display;
+  }
+}
+
+function onAppChange(e) {
+  const el = e.target;
+  if (el.dataset && el.dataset.action === 'importJSON') {
+    const file = el.files && el.files[0];
+    if (file) importJSONFile(file);
+    el.value = '';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const app = document.getElementById('app');
+  app.addEventListener('click', onAppClick);
+  app.addEventListener('input', onAppInput);
+  app.addEventListener('change', onAppChange);
+  render();
+});
+</script>
+</body>
+</html>
